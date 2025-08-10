@@ -8,10 +8,12 @@ const UrlShortener = () => {
     const [longUrl, setLongUrl] = useState("");
     const [showToast, setShowToast] = useState(false);
     const [shortUrl, setShortUrl] = useState("");
+    const [loading, setLoading] = useState(false); 
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        try{
+        setLoading(true);
+        try {
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/shorten`, {
                 method: "POST",
                 headers: {
@@ -23,14 +25,14 @@ const UrlShortener = () => {
             if (response.ok) {
                 setShortUrl(data.shortUrl);
                 setShowToast(true);
-                setTimeout(() => {
-                    setShowToast(false);
-                }, 2000);
+                setTimeout(() => setShowToast(false), 2000);
             } else {
                 throw new Error(data.error);
             }
-        }catch(err){
+        } catch (err) {
             console.error(err);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -65,19 +67,28 @@ const UrlShortener = () => {
                                 required
                                 className="flex-1 p-3 rounded-md outline-none text-gray-800 border-blue-500 border-[1px] bg-zinc-200"
                             />
-                            <CustomButton onClick={handleSubmit}>
-                                Shorten URL
+                            <CustomButton
+                                onClick={handleSubmit}
+                                disabled={loading}
+                            >
+                                {loading ? (
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        Shortening...
+                                    </div>
+                                ) : (
+                                    "Shorten URL"
+                                )}
                             </CustomButton>
                         </div>
                     </div>
                 </form>
                 {shortUrl && <ShortLinkResult shortUrl={shortUrl} />}
             </section>
-            
-            <PortalToast show={showToast} message={`Shortened URL created`} />
 
+            <PortalToast show={showToast} message={`Shortened URL created`} />
         </main>
-    );  
+    );
 };
 
 export default UrlShortener;
